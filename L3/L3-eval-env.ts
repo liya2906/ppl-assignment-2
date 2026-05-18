@@ -85,7 +85,7 @@ const applyObject = (obj: Object, args: Value[]): Result<Value> => {
     }
     const method = obj.methods.find((m: Binding) => m.var.var === methodName.val);
     if (method === undefined) {
-        return makeFailure('Unrecognized method: ${methodName.val}');
+        return makeFailure(`Unrecognized method: ${methodName.val}`);
     }
     return bind(
         applicativeEval(method.val, obj.env),

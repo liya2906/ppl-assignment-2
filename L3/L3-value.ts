@@ -44,8 +44,14 @@ export const makeClosureEnv = (params: VarDecl[], body: CExp[], env: Env): Closu
 export const makeClass = (fields: VarDecl[], methods: Binding[], env: Env): Class =>
     ({ tag: "Class", fields: fields, methods: methods, env: env});
 
+export const makeClassSub = (fields: VarDecl[], methods: Binding[]): Class =>
+    ({ tag: "Class", fields: fields, methods: methods, env: makeEmptyEnv() });
+
 export const makeObject = (methods: Binding[], env: Env): Object =>
     ({tag: "Object",methods: methods ,env: env});
+
+export const makeObjectSub = (methods: Binding[]): Object =>
+    ({ tag: "Object", methods: methods, env: makeEmptyEnv() });
 
 export const isClosure = (x: any): x is Closure => x.tag === "Closure";
 
@@ -114,6 +120,6 @@ export const valueToString = (val: Value): string =>
     isSymbolSExp(val) ? val.val :
     isEmptySExp(val) ? "'()" :
     isCompoundSExp(val) ? compoundSExpToString(val) :
-    isClass(val) ? "<Class>" :
-    isObject(val) ? "<Object>" :
+    isClass(val) ? "Class" :
+    isObject(val) ? "Object" :
     val;
