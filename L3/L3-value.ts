@@ -10,10 +10,10 @@ import { isArray, isNumber, isString } from '../shared/type-predicates';
 
 export type Value = SExpValue;
 
-export type Functional = PrimOp | Closure;
+export type Functional = PrimOp | Closure | Class | Object;
 
 
-export const isFunctional = (x: any): x is Functional => isPrimOp(x) || isClosure(x);
+export const isFunctional = (x: any): x is Functional => isPrimOp(x) || isClosure(x) || isClass(x) || isObject(x);
 
 // ========================================================
 // Closure for L4 - the field env is added.
@@ -32,8 +32,7 @@ export type Class = {
 }
 export type Object = {
     tag: "Object";
-    classVal: Class;
-    fieldValues: Value[];
+    methods: Binding[];
     env: Env;
 }
 export const makeClosure = (params: VarDecl[], body: CExp[]): Closure =>
@@ -45,8 +44,8 @@ export const makeClosureEnv = (params: VarDecl[], body: CExp[], env: Env): Closu
 export const makeClass = (fields: VarDecl[], methods: Binding[], env: Env): Class =>
     ({ tag: "Class", fields: fields, methods: methods, env: env});
 
-export const makeObject = (classVal: Class, fieldValues: Value[], env: Env): Object =>
-    ({tag: "Object", classVal: classVal, fieldValues: fieldValues,env: env});
+export const makeObject = (methods: Binding[], env: Env): Object =>
+    ({tag: "Object",methods: methods ,env: env});
 
 export const isClosure = (x: any): x is Closure => x.tag === "Closure";
 
@@ -74,7 +73,7 @@ export type SymbolSExp = {
 export type SExpValue = number | boolean | string | PrimOp | Closure | SymbolSExp | EmptySExp | CompoundSExp | Class | Object ;
 export const isSExp = (x: any): x is SExpValue =>
     typeof(x) === 'string' || typeof(x) === 'boolean' || typeof(x) === 'number' ||
-    isSymbolSExp(x) || isCompoundSExp(x) || isEmptySExp(x) || isPrimOp(x) || isClosure(x);
+    isSymbolSExp(x) || isCompoundSExp(x) || isEmptySExp(x) || isPrimOp(x) || isClosure(x)|| isClass(x) || isObject(x);
 
 export const makeCompoundSExp = (val1: SExpValue, val2: SExpValue): CompoundSExp =>
     ({tag: "CompoundSexp", val1: val1, val2 : val2});

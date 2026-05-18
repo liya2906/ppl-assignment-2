@@ -56,12 +56,41 @@ const evalClass = (exp: ClassExp, env: Env): Result<Class> =>
 const applyProcedure = (proc: Value, args: Value[]): Result<Value> =>
     isPrimOp(proc) ? applyPrimitive(proc, args) :
     isClosure(proc) ? applyClosure(proc, args) :
+    isClass(proc) ? applyClass(proc, args) :
+    isObject(proc) ? applyObject(proc, args) :
     makeFailure(`Bad procedure ${format(proc)}`);
 
 const applyClosure = (proc: Closure, args: Value[]): Result<Value> => {
     const vars = map((v: VarDecl) => v.var, proc.params);
     return evalSequence(proc.body, makeExtEnv(vars, args, proc.env));
 }
+
+const applyClass = (classVal: Class, args: Value[]): Result<Object> => {
+    if (classVal.fields.length !== args.length) {
+        return makeFailure("Wrong number of arguments for class");
+    }
+    const fieldNames = map((v: VarDecl) => v.var, classVal.fields);
+    const objectEnv = makeExtEnv(fieldNames, args, classVal.env);
+    return makeOk(makeObject(classVal.methods, objectEnv));
+};
+
+const applyObject = (obj: Object, args: Value[]): Result<Value> => {
+    if (!isNonEmptyList<Value>(args)) {
+        return makeFailure("No method name provided");
+    }
+    const methodName = first(args);
+    const methodArgs = rest(args);
+    if (!isSymbolSExp(methodName)) {
+        return makeFailure("Method name must be a symbol");
+    }
+    const method = obj.methods.find((m: Binding) => m.var.var === methodName.val);
+    if (method === undefined) {
+        return makeFailure('Unrecognized method: ${methodName.val}');
+    }
+    return bind(
+        applicativeEval(method.val, obj.env),
+        (proc: Value) => applyProcedure(proc, methodArgs));
+};
 
 // Evaluate a sequence of expressions (in a program)
 export const evalSequence = (seq: Exp[], env: Env): Result<Value> =>
