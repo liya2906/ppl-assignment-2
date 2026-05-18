@@ -3,11 +3,12 @@
 
 import { map } from "ramda";
 import { isBoolExp, isCExp, isLitExp, isNumExp, isPrimOp, isStrExp, isVarRef,
-         isAppExp, isDefineExp, isIfExp, isLetExp, isProcExp,
-         Binding, VarDecl, CExp, Exp, IfExp, LetExp, ProcExp, Program,
+         isAppExp, isDefineExp, isIfExp, isLetExp, isProcExp, isClassExp,
+         Binding, VarDecl, CExp, Exp, IfExp, LetExp, ProcExp, Program, ClassExp,
          parseL3Exp,  DefineExp} from "./L3-ast";
 import { applyEnv, makeEmptyEnv, makeExtEnv, Env } from "./L3-env-env";
-import { isClosure, makeClosureEnv, Closure, Value } from "./L3-value";
+import { isClosure, makeClosureEnv, Closure, Value, makeClass, isClass, Class,
+         makeObject, isObject, Object, isSymbolSExp} from "./L3-value";
 import { applyPrimitive } from "./evalPrimitive";
 import { allT, first, rest, isEmpty, isNonEmptyList } from "../shared/list";
 import { Result, makeOk, makeFailure, bind, mapResult } from "../shared/result";
@@ -26,6 +27,7 @@ const applicativeEval = (exp: CExp, env: Env): Result<Value> =>
     isLitExp(exp) ? makeOk(exp.val) :
     isIfExp(exp) ? evalIf(exp, env) :
     isProcExp(exp) ? evalProc(exp, env) :
+    isClassExp(exp) ? evalClass(exp, env) :
     isLetExp(exp) ? evalLet(exp, env) :
     isAppExp(exp) ? bind(applicativeEval(exp.rator, env),
                       (proc: Value) =>
@@ -45,6 +47,9 @@ const evalIf = (exp: IfExp, env: Env): Result<Value> =>
 
 const evalProc = (exp: ProcExp, env: Env): Result<Closure> =>
     makeOk(makeClosureEnv(exp.args, exp.body, env));
+
+const evalClass = (exp: ClassExp, env: Env): Result<Class> =>
+    makeOk(makeClass(exp.fields, exp.methods, env));
 
 // KEY: This procedure does NOT have an env parameter.
 //      Instead we use the env of the closure.
